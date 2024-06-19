@@ -1,0 +1,57 @@
+/* Вставьте CSS сюда */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    color: #333;
+}
+
+#licenseForm,
+#messageForm {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+input,
+button,
+textarea {
+    padding: 10px;
+    margin-bottom: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+button {
+    cursor: pointer;
+    background-color: #4caf50;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#serverKeyDisplay {
+    font-weight: bold;
+}
+
+#tgChannelsList {
+    margin-top: 20px;
+}
+

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoChain Message Composer</title>
+    <style>
+        .isfield {width: 100%;height:80vh;}
+    </style>
+    <link media="all" rel="stylesheet" type="text/css" href="front/main.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+</head>
+<body>
+<h1>GoChain Message Composer</h1>
+
+<div id="licenseForm">
+    <label for="licenseKey">Enter License Key:</label>
+    <input type="text" id="licenseKey" placeholder="Enter your license key" maxlength="128" size="81">
+    <button id="checkLicenseBtn">Check License</button>
+</div>
+
+<div id="messageForm" style="display: none;">
+    <p id="serverKeyDisplay"></p>
+    <div id="licenseInfo" style="position: absolute; top: 10px; left: 10px;"></div>
+    <label for="markdownEditor">Enter your message:</label>
+    <textarea id="markdownEditor" placeholder="Enter your message in Markdown" class="isfield"></textarea>
+
+    <!-- Блок для отображения списка ТГ каналов -->
+    <div id="tgChannelsList" style="margin-top: 20px;"></div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#checkLicenseBtn").click(function () {
+            var licenseKey = $("#licenseKey").val();
+            localStorage.setItem('licenseKey', licenseKey);
+
+            $.get(`https://license.gochain.space/license/check/${licenseKey}`, function (data) {
+                if (data.error === 0) {
+                    $("#licenseForm").hide();
+                    $("#serverKeyDisplay").text(`Server Key: ${licenseKey}`);
+                    $("#messageForm").show();
+
+                    // После успешной проверки лицензии, получаем список ТГ каналов
+                    getTGChannelsList(licenseKey);
+                } else {
+                    alert("Invalid License Key. Please try again.");
+                }
+            });
+        });
+
+
+        // Функция для получения списка ТГ каналов
+        function getTGChannelsList(licenseKey) {
+            $.get(`https://license.gochain.space/license/mess/accounts/tg/${licenseKey}`, function (channelsData) {
+                console.log(channelsData['index']);
+                if (channelsData.error === 0 && channelsData.index) {
+                    var channelsListHTML = "<div style='float: left; margin: 10px;'>";
+
+                    // Итерация по свойствам объекта index
+                    for (var key in channelsData.index) {
+                        if (channelsData.index.hasOwnProperty(key)) {
+                            var channel = channelsData.index[key];
+                            channelsListHTML += `
+                                ${channel.bot_type == '1' ? `<div style="float: left; margin: 10px;"><button onclick="handleButtonClick('${channel.bot_api_key}', '${channel.bot_chat_id}', 'send')">Отправить сообщение</button></div>` : `<div style="float: left; margin: 10px;"><button onclick="handleButtonClick('${channel.bot_api_key}', '${channel.bot_chat_id}', 'view')">Проверить в тестовом чате</button></div>`}
+                            `;
+                        }
+                    }
+                    channelsListHTML += '</div>';
+
+                    $("#tgChannelsList").html(channelsListHTML);
+                } else {
+                    $("#tgChannelsList").html("<p>No TG Channels available.</p>");
+                }
+            }).fail(function () {
+                alert("Failed to fetch TG Channels data. Please try again.");
+            });
+        }
+
+        window.handleButtonClick = function (botApiKey, botChatId, action) {
+            var licenseKey = localStorage.getItem('licenseKey');
+            var messageInput = $('#markdownEditor').val();
+
+            // Проверка длины текста
+            if (messageInput.length === 0 || messageInput.length > 2000) {
+                alert('Message length must be between 1 and 2000 characters.');
+                return;
+            }
+
+            console.log('License Key:', licenseKey);
+            console.log('Message to send:', messageInput);
+
+            $.ajax({
+                type: 'POST',
+                url: 'https://tg.gochain.space/add',
+                contentType: 'application/json',
+                data: JSON.stringify({ server_key: licenseKey, message: messageInput, bot_api_key: botApiKey, bot_chat_id: botChatId }),
+                success: function (response) {
+                    alert('Message sent: ' + messageInput);
+                },
+                error: function (error) {
+                    alert('Error sending message');
+                }
+            });
+        };
+    });
+</script>
+
+</body>
+</html>
